@@ -1,0 +1,1 @@
+# Current URL for offsides: https://stanford.box.com/shared/static/pgc2z0pke4w2z1p6540h.zip

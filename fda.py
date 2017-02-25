@@ -58,8 +58,6 @@ drugs = set()
 ingredients = set()
 forms = set()
 products = []
-
-
 reg_split_no_esc = re.compile(';[\s]?')
 
 with open(os.path.join(temp_folder, file_name, 'Products.txt')) as csv_file:
