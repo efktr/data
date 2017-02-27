@@ -83,13 +83,15 @@ rows = list()
 for i, row in drugbank_df.iterrows():
     try:
         compounds = pubchempy.get_compounds(row.inChi, namespace='inchikey')
+        compounds = [compound.cid for compound in compounds]
+        if len(compounds) > 0:
+            row['pubChemIds'] = compounds
+            print(row['inChi'], "-->", row['pubChemIds'])
+            rows.append(row)
     except pubchempy.BadRequestError:
         continue
-    compounds = [compound.cid for compound in compounds]
-    if len(compounds) > 0:
-        row['pubChemIds'] = compounds
-        print(row['inChi'], "-->", row['pubChemIds'])
-        rows.append(row)
+    except pubchempy.ServerError:
+        continue
 
 # mapped_df = pandas.DataFrame(rows)
 # mapping_df = mapped_df[['drugbankId', 'pubChemIds']].dropna()
@@ -104,5 +106,5 @@ with open(os.path.join(data_folder, scope_name, "inChiToPubChemIds.json"), 'wb')
     out.write(json.dumps(rows))
     out.close()
 
-# Save mapping
-# mapping_df.to_json(os.path.join(data_folder, scope_name, "pubChemToDrugbank.json"))
+    # Save mapping
+    # mapping_df.to_json(os.path.join(data_folder, scope_name, "pubChemToDrugbank.json"))
