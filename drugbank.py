@@ -7,6 +7,7 @@ import urllib2
 import pandas
 import zipfile
 import csv
+import json
 
 source_zip_url = 'https://www.drugbank.ca/releases/5-0-5/downloads/all-drugbank-vocabulary'
 temp_folder = './temp'
@@ -71,32 +72,27 @@ with open(os.path.join(temp_folder, scope_name, "drugbank vocabulary.csv")) as c
             "inChi": inChi
         }
 
-        data.append(current)
+        if current['inChi'] is not None and current['inChi'] is not "":
+            data.append(current)
 
 # Read DrugBank compounds
 drugbank_df = pandas.DataFrame(data)
-drugbank_df = drugbank_df[-drugbank_df.inChi.isnull()]
 
 # map DrugBank compounds to pubchem using InChI
-print("Not found:",)
 rows = list()
 for i, row in drugbank_df.iterrows():
     try:
-        compounds = pubchempy.get_compounds(row.inChi, namespace='inchi')
+        compounds = pubchempy.get_compounds(row.inChi, namespace='inchikey')
     except pubchempy.BadRequestError:
-        print('+BR',)
         continue
-    try:
-        compound, = compounds
-    except ValueError:
-        print('+VE',)
-        continue
-    row['pubChemId'] = compound.cid
-    rows.append(row)
+    compounds = [compound.cid for compound in compounds]
+    if len(compounds) > 0:
+        row['pubChemIds'] = compounds
+        print(row['inChi'], "-->", row['pubChemIds'])
+        rows.append(row)
 
-print()
-mapped_df = pandas.DataFrame(rows)
-mapping_df = mapped_df[['drugbankId', 'pubChemId']].dropna()
+# mapped_df = pandas.DataFrame(rows)
+# mapping_df = mapped_df[['drugbankId', 'pubChemIds']].dropna()
 
 
 print("Writing data...")
@@ -104,5 +100,9 @@ print("Writing data...")
 if not os.path.isdir(os.path.join(data_folder, scope_name)):
     os.makedirs(os.path.join(data_folder, scope_name))
 
+with open(os.path.join(data_folder, scope_name, "inChiToPubChemIds.json"), 'wb') as out:
+    out.write(json.dumps(rows))
+    out.close()
+
 # Save mapping
-mapping_df.to_json(os.path.join(data_folder, scope_name, "pubChemToDrugbank.json"))
+# mapping_df.to_json(os.path.join(data_folder, scope_name, "pubChemToDrugbank.json"))
