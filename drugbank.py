@@ -75,12 +75,17 @@ with open(os.path.join(temp_folder, scope_name, "drugbank vocabulary.csv")) as c
         if current['inChi'] is not None and current['inChi'] is not "":
             data.append(current)
 
-# Read DrugBank compounds
-drugbank_df = pandas.DataFrame(data)
-
 if not os.path.isdir(os.path.join(temp_folder, scope_name, "temp")):
     os.makedirs(os.path.join(temp_folder, scope_name, "temp"))
 
+# Filter out data that has already been downloaded
+cached_files = [f.replace(".json", "") for f in os.listdir(os.path.join(temp_folder, scope_name, "temp")) if os.path.isfile(os.path.join(temp_folder, scope_name, "temp", f))]
+data = [item for item in data if item["drugbankId"] not in cached_files]
+
+print("Getting pubChemIds for", len(data), "items")
+
+# Read DrugBank compounds
+drugbank_df = pandas.DataFrame(data)
 # map DrugBank compounds to pubchem using InChI
 rows = list()
 for i, row in drugbank_df.iterrows():
