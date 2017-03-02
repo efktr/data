@@ -78,6 +78,12 @@ with open(os.path.join(temp_folder, scope_name, "drugbank vocabulary.csv")) as c
 # Read DrugBank compounds
 drugbank_df = pandas.DataFrame(data)
 
+if not os.path.isdir(os.path.join(data_folder, scope_name)):
+    os.makedirs(os.path.join(data_folder, scope_name))
+
+if not os.path.isdir(os.path.join(data_folder, scope_name, "temp")):
+    os.makedirs(os.path.join(data_folder, scope_name, "temp"))
+
 # map DrugBank compounds to pubchem using InChI
 rows = list()
 for i, row in drugbank_df.iterrows():
@@ -88,9 +94,14 @@ for i, row in drugbank_df.iterrows():
             row['pubChemIds'] = compounds
             print(row['inChi'], "-->", row['pubChemIds'])
             rows.append(row)
+        with open(os.path.join(data_folder, scope_name, "temp", row['drugbankId'] + ".json"), 'wb') as out:
+            out.write(json.dumps(row))
+            out.close()
     except pubchempy.BadRequestError:
         continue
     except pubchempy.ServerError:
+        continue
+    except:
         continue
 
 # mapped_df = pandas.DataFrame(rows)
