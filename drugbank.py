@@ -94,28 +94,35 @@ for i, row in drugbank_df.iterrows():
         compounds = [compound.cid for compound in compounds]
         if len(compounds) > 0:
             row['pubChemIds'] = compounds
-            print(row['inChi'], "-->", row['pubChemIds'])
+            print(row['drugbankId'], "-->", row['pubChemIds'])
             rows.append(row)
             row.to_json(os.path.join(temp_folder, scope_name, "temp", row['drugbankId'] + ".json"))
+        else:
+            print(row['drugbankId'], "-->", "NO HIT")
     except pubchempy.BadRequestError:
+        print(row['drugbankId'], "-->", "Bad Request!")
         continue
     except pubchempy.ServerError:
+        print(row['drugbankId'], "-->", "Server Error!")
         continue
     except:
+        print("Unknown exception")
         continue
-
-# mapped_df = pandas.DataFrame(rows)
-# mapping_df = mapped_df[['drugbankId', 'pubChemIds']].dropna()
-
 
 print("Writing data...")
 
 if not os.path.isdir(os.path.join(data_folder, scope_name)):
     os.makedirs(os.path.join(data_folder, scope_name))
 
+inChiToPubChemIds = []
+cached_files = [f for f in os.listdir(os.path.join(temp_folder, scope_name, "temp")) if os.path.isfile(os.path.join(temp_folder, scope_name, "temp", f))]
+for f in cached_files:
+    with open(os.path.join(temp_folder, scope_name, "temp", f)) as current:
+        inChiToPubChemIds.append(json.loads(current))
+        f.close()
+
 with open(os.path.join(data_folder, scope_name, "inChiToPubChemIds.json"), 'wb') as out:
-    out.write(json.dumps(rows))
+    out.write(json.dumps(inChiToPubChemIds))
     out.close()
 
-    # Save mapping
-    # mapping_df.to_json(os.path.join(data_folder, scope_name, "pubChemToDrugbank.json"))
+quit()
