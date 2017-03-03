@@ -14,6 +14,7 @@ temp_folder = './temp'
 data_folder = './data'
 scope_name = 'drugbank'
 temp_file = os.path.join(temp_folder, scope_name + '.zip')
+use_cache_only = True
 
 if not os.path.isdir(temp_folder):
     os.makedirs(temp_folder)
@@ -82,32 +83,33 @@ if not os.path.isdir(os.path.join(temp_folder, scope_name, "temp")):
 cached_files = [f.replace(".json", "") for f in os.listdir(os.path.join(temp_folder, scope_name, "temp")) if os.path.isfile(os.path.join(temp_folder, scope_name, "temp", f))]
 data = [item for item in data if item["drugbankId"] not in cached_files]
 
-print("Getting pubChemIds for", len(data), "items")
+if not use_cache_only:
+    print("Getting pubChemIds for", len(data), "items")
 
-# Read DrugBank compounds
-drugbank_df = pandas.DataFrame(data)
-# map DrugBank compounds to pubchem using InChI
-rows = list()
-for i, row in drugbank_df.iterrows():
-    try:
-        compounds = pubchempy.get_compounds(row.inChi, namespace='inchikey')
-        compounds = [compound.cid for compound in compounds]
-        if len(compounds) > 0:
-            row['pubChemIds'] = compounds
-            print(row['drugbankId'], "-->", row['pubChemIds'])
-            rows.append(row)
-            row.to_json(os.path.join(temp_folder, scope_name, "temp", row['drugbankId'] + ".json"))
-        else:
-            print(row['drugbankId'], "-->", "NO HIT")
-    except pubchempy.BadRequestError:
-        print(row['drugbankId'], "-->", "Bad Request!")
-        continue
-    except pubchempy.ServerError:
-        print(row['drugbankId'], "-->", "Server Error!")
-        continue
-    except:
-        print("Unknown exception")
-        continue
+    # Read DrugBank compounds
+    drugbank_df = pandas.DataFrame(data)
+    # map DrugBank compounds to pubchem using InChI
+    rows = list()
+    for i, row in drugbank_df.iterrows():
+        try:
+            compounds = pubchempy.get_compounds(row.inChi, namespace='inchikey')
+            compounds = [compound.cid for compound in compounds]
+            if len(compounds) > 0:
+                row['pubChemIds'] = compounds
+                print(row['drugbankId'], "-->", row['pubChemIds'])
+                rows.append(row)
+                row.to_json(os.path.join(temp_folder, scope_name, "temp", row['drugbankId'] + ".json"))
+            else:
+                print(row['drugbankId'], "-->", "NO HIT")
+        except pubchempy.BadRequestError:
+            print(row['drugbankId'], "-->", "Bad Request!")
+            continue
+        except pubchempy.ServerError:
+            print(row['drugbankId'], "-->", "Server Error!")
+            continue
+        except:
+            print("Unknown exception")
+            continue
 
 print("Writing data...")
 
@@ -118,11 +120,23 @@ inChiToPubChemIds = []
 cached_files = [f for f in os.listdir(os.path.join(temp_folder, scope_name, "temp")) if os.path.isfile(os.path.join(temp_folder, scope_name, "temp", f))]
 for f in cached_files:
     with open(os.path.join(temp_folder, scope_name, "temp", f)) as current:
-        inChiToPubChemIds.append(json.loads(current))
-        f.close()
+        inChiToPubChemIds.append(json.loads(current.read()))
+        current.close()
 
 with open(os.path.join(data_folder, scope_name, "inChiToPubChemIds.json"), 'wb') as out:
     out.write(json.dumps(inChiToPubChemIds))
+    out.close()
+
+with open(os.path.join(data_folder, scope_name, "drugbankToPubChem.json"), 'wb') as out:
+    out.write(json.dumps([{"drugbankId": e['drugbankId'], "pubChemIds": e['pubChemIds']} for e in inChiToPubChemIds]))
+    out.close()
+
+with open(os.path.join(data_folder, scope_name, "pubChemToDrugbankDictionary.json"), 'wb') as out:
+    result = []
+    for item in [{"drugbankId": e['drugbankId'], "pubChemIds": e['pubChemIds']} for e in inChiToPubChemIds]:
+        for pubChemId in item["pubChemIds"]:
+            result.append({"drugbankId": e['drugbankId'], "pubChemId": pubChemId})
+    out.write(json.dumps(result))
     out.close()
 
 quit()
