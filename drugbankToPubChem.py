@@ -14,7 +14,7 @@ temp_folder = './temp'
 data_folder = './data'
 scope_name = 'drugbank'
 temp_file = os.path.join(temp_folder, scope_name + '.zip')
-use_cache_only = True
+use_cache_only = False
 
 if not os.path.isdir(temp_folder):
     os.makedirs(temp_folder)
