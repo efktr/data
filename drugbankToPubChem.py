@@ -127,15 +127,16 @@ with open(os.path.join(data_folder, scope_name, "inChiToPubChemIds.json"), 'wb')
     out.write(json.dumps(inChiToPubChemIds))
     out.close()
 
+drugbankToPubChem = [{"drugbankId": e['drugbankId'], "pubChemIds": e['pubChemIds']} for e in inChiToPubChemIds]
 with open(os.path.join(data_folder, scope_name, "drugbankToPubChem.json"), 'wb') as out:
-    out.write(json.dumps([{"drugbankId": e['drugbankId'], "pubChemIds": e['pubChemIds']} for e in inChiToPubChemIds]))
+    out.write(json.dumps(drugbankToPubChem))
     out.close()
 
 with open(os.path.join(data_folder, scope_name, "pubChemToDrugbankDictionary.json"), 'wb') as out:
     result = []
-    for item in [{"drugbankId": e['drugbankId'], "pubChemIds": e['pubChemIds']} for e in inChiToPubChemIds]:
+    for item in drugbankToPubChem:
         for pubChemId in item["pubChemIds"]:
-            result.append({"drugbankId": e['drugbankId'], "pubChemId": pubChemId})
+            result.append({"drugbankId": item['drugbankId'], "pubChemId": pubChemId})
     out.write(json.dumps(result))
     out.close()
 
