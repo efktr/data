@@ -91,7 +91,6 @@ if not os.path.isdir(data_folder):
 if not os.path.isdir(os.path.join(data_folder, file_name)):
     os.makedirs(os.path.join(data_folder, file_name))
 
-
 with open(os.path.join(data_folder, file_name, "drugs.json"), 'wb') as out:
     out.write(json.dumps(list(drugs)))
     out.close()
