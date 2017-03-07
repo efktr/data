@@ -21,8 +21,8 @@ with open(source_zip_location) as f:
     if not os.path.isdir(data_folder):
         os.makedirs(data_folder)
 
-    if not os.path.isdir(data_folder, scope_name):
-        os.makedirs(data_folder, scope_name)
+    if not os.path.isdir(os.path.join(data_folder, scope_name)):
+        os.makedirs(os.path.join(data_folder, scope_name))
 
     with open(os.path.join(data_folder, scope_name, 'drugbank.json'), 'wb') as out:
         print("Writing JSON representation of database and filtering only wanted fields")
@@ -42,14 +42,14 @@ with open(source_zip_location) as f:
             elif isinstance(drug['synonyms']['synonym'], list):
                 current['synonyms'] = list(set([e['#text'] for e in drug['synonyms']['synonym'] if e['#text'] is not None]))
             else:
-                current['synonyms'] = list(drug['synonyms']['synonym']['#text'])
+                current['synonyms'] = [drug['synonyms']['synonym']['#text']]
 
             if drug['products'] is None:
                 current['products'] = None
             elif isinstance(drug['products']['product'], list):
                 current['products'] = list(set([e['name'] for e in drug['products']['product'] if e['name'] is not None]))
             else:
-                current['products'] = list(drug['products']['product']['name'])
+                current['products'] = [drug['products']['product']['name']]
 
             result.append(current)
 
