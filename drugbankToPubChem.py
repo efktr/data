@@ -8,6 +8,7 @@ import pandas
 import zipfile
 import csv
 import json
+import re
 
 source_zip_url = 'https://www.drugbank.ca/releases/5-0-5/downloads/all-drugbank-vocabulary'
 temp_folder = './temp'
@@ -55,14 +56,14 @@ except zipfile.error, e:
 
 print("Reading data ...")
 data = []
-
+reg_split_no_esc = re.compile('[\s]?\|[\s]?')
 with open(os.path.join(temp_folder, scope_name, "drugbank vocabulary.csv")) as csv_file:
     reader = csv.DictReader(csv_file)
     for row in reader:
         # Fields: DrugBank ID,Accession Numbers,Common name,CAS,UNII,Synonyms,Standard InChI Key
         drugbankId = row['DrugBank ID']
         commonName = row['Common name']
-        synonyms = row['Synonyms']
+        synonyms = re.split(reg_split_no_esc, row['Synonyms'])
         inChi = row['Standard InChI Key']
 
 
