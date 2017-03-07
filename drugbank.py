@@ -18,7 +18,13 @@ with open(source_zip_location) as f:
     d = xmltodict.parse(f, xml_attribs=True)
     print("Parsed XML into dictionaries")
 
-    with open(os.path.join(data_folder, scope_name + 'drugbank.json'), 'wb') as out:
+    if not os.path.isdir(data_folder):
+        os.makedirs(data_folder)
+
+    if not os.path.isdir(data_folder, scope_name):
+        os.makedirs(data_folder, scope_name)
+
+    with open(os.path.join(data_folder, scope_name, 'drugbank.json'), 'wb') as out:
         print("Writing JSON representation of database and filtering only wanted fields")
 
         result = []
