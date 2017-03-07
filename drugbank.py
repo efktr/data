@@ -8,7 +8,7 @@ temp_folder = './temp'
 data_folder = './data'
 scope_name = 'drugbank'
 
-source_zip_location = os.path.join(data_folder, scope_name, "drugbank-full.xml")
+source_zip_location = os.path.join(temp_folder, scope_name, "drugbank-full.xml")
 
 print("Opening XML database dump")
 with open(source_zip_location) as f:
@@ -27,23 +27,23 @@ with open(source_zip_location) as f:
             current = {'name': drug['name']}
 
             if isinstance(drug['drugbank-id'], list):
-                current['id'] = [e['#text'] for e in drug['drugbank-id'] if isinstance(e, dict) and e['@primary'] == 'true'][0]
+                current['drugbankId'] = [e['#text'] for e in drug['drugbank-id'] if isinstance(e, dict) and e['@primary'] == 'true'][0]
             else:
-                current['id'] = drug['drugbank-id']['#text']
+                current['drugbankId'] = drug['drugbank-id']['#text']
 
             if drug['synonyms'] is None:
                 current['synonyms'] = None
             elif isinstance(drug['synonyms']['synonym'], list):
                 current['synonyms'] = list(set([e['#text'] for e in drug['synonyms']['synonym'] if e['#text'] is not None]))
             else:
-                current['synonyms'] = drug['synonyms']['synonym']['#text']
+                current['synonyms'] = list(drug['synonyms']['synonym']['#text'])
 
             if drug['products'] is None:
                 current['products'] = None
             elif isinstance(drug['products']['product'], list):
                 current['products'] = list(set([e['name'] for e in drug['products']['product'] if e['name'] is not None]))
             else:
-                current['products'] = drug['products']['product']['name']
+                current['products'] = list(drug['products']['product']['name'])
 
             result.append(current)
 
