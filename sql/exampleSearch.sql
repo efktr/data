@@ -1,4 +1,5 @@
-SELECT drugbank_id, count("text")
+SELECT name, count("text") AS support
 	FROM public.search
-    WHERE text ~* 'amphetamine'
-GROUP BY drugbank_id;
+    WHERE text ~* '^aspir'
+GROUP BY drugbank_id, name
+ORDER BY support DESC;
