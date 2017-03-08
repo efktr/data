@@ -73,7 +73,12 @@ reader = csv.DictReader(sider_freq_content.split("\n"), delimiter='\t',
                             'umls_cui_from_meddra',
                             'side_effect_name'])
 for row in reader:
-    umls_dictionary.add((row["umls_cui_from_meddra"], row['side_effect_name']))
+    if row["umls_cui_from_meddra"] is not None and row["umls_cui_from_meddra"] != '':
+        umls_dictionary.add((row["umls_cui_from_meddra"], row['side_effect_name']))
+    elif row["umls_cui_from_label"] is not None and row["umls_cui_from_label"] != '':
+        umls_dictionary.add((row["umls_cui_from_label"], row['side_effect_name']))
+    else:
+        print("Lost one dictionary item")
     if not row["stitch_id_stereo"] in stitch_to_umls:
         stitch_to_umls[row["stitch_id_stereo"]] = {
             "stitchId": row["stitch_id_stereo"],
