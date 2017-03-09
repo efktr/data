@@ -73,39 +73,40 @@ reader = csv.DictReader(sider_freq_content.split("\n"), delimiter='\t',
                             'umls_cui_from_meddra',
                             'side_effect_name'])
 for row in reader:
-    if row["umls_cui_from_meddra"] is not None and row["umls_cui_from_meddra"] != '':
-        umls_dictionary.add((row["umls_cui_from_meddra"], row['side_effect_name']))
-    elif row["umls_cui_from_label"] is not None and row["umls_cui_from_label"] != '':
-        umls_dictionary.add((row["umls_cui_from_label"], row['side_effect_name']))
-    else:
-        print("Lost one dictionary item")
-    if not row["stitch_id_stereo"] in stitch_to_umls:
-        stitch_to_umls[row["stitch_id_stereo"]] = {
-            "stitchId": row["stitch_id_stereo"],
-            "stitchIdFlat": row["stitch_id_flat"],
-            "pubChemId": stitch_stereo_to_pubchem(row["stitch_id_stereo"]),
-            "adverseReactions": {
-                row["umls_cui_from_meddra"]: {
-                    "umlsId": row["umls_cui_from_meddra"],
+    umls_cui = row["umls_cui_from_meddra"] if row["umls_cui_from_meddra"] is not None and row["umls_cui_from_meddra"] != '' else row["umls_cui_from_label"]
+
+    if umls_cui is not None and umls_cui != '':
+        umls_dictionary.add((umls_cui, row['side_effect_name']))
+
+        if not row["stitch_id_stereo"] in stitch_to_umls:
+            stitch_to_umls[row["stitch_id_stereo"]] = {
+                "stitchId": row["stitch_id_stereo"],
+                "stitchIdFlat": row["stitch_id_flat"],
+                "pubChemId": stitch_stereo_to_pubchem(row["stitch_id_stereo"]),
+                "adverseReactions": {
+                    umls_cui: {
+                        "umlsId": umls_cui,
+                        "lower": float(row["lower"]),
+                        "upper": float(row["upper"]),
+                        "count": 1.0
+                    }
+                }
+            }
+        else:
+            if not umls_cui in stitch_to_umls[row["stitch_id_stereo"]]['adverseReactions']:
+                stitch_to_umls[row["stitch_id_stereo"]]['adverseReactions'][umls_cui] = {
+                    "umlsId": umls_cui,
                     "lower": float(row["lower"]),
                     "upper": float(row["upper"]),
                     "count": 1.0
                 }
-            }
-        }
+            else:
+                stitch_to_umls[row["stitch_id_stereo"]]['adverseReactions'][umls_cui]["count"] += 1.0
+                current = stitch_to_umls[row["stitch_id_stereo"]]['adverseReactions'][umls_cui]
+                stitch_to_umls[row["stitch_id_stereo"]]['adverseReactions'][umls_cui]['lower'] = current['lower'] + (1 / current['count']) * (float(row["lower"]) - current['lower'])
+                stitch_to_umls[row["stitch_id_stereo"]]['adverseReactions'][umls_cui]['upper'] = current['upper'] + (1 / current['count']) * (float(row["upper"]) - current['upper'])
     else:
-        if not row["umls_cui_from_meddra"] in stitch_to_umls[row["stitch_id_stereo"]]['adverseReactions']:
-            stitch_to_umls[row["stitch_id_stereo"]]['adverseReactions'][row["umls_cui_from_meddra"]] = {
-                "umlsId": row["umls_cui_from_meddra"],
-                "lower": float(row["lower"]),
-                "upper": float(row["upper"]),
-                "count": 1.0
-            }
-        else:
-            stitch_to_umls[row["stitch_id_stereo"]]['adverseReactions'][row["umls_cui_from_meddra"]]["count"] += 1.0
-            current = stitch_to_umls[row["stitch_id_stereo"]]['adverseReactions'][row["umls_cui_from_meddra"]]
-            stitch_to_umls[row["stitch_id_stereo"]]['adverseReactions'][row["umls_cui_from_meddra"]]['lower'] = current['lower'] + (1 / current['count']) * (float(row["lower"]) - current['lower'])
-            stitch_to_umls[row["stitch_id_stereo"]]['adverseReactions'][row["umls_cui_from_meddra"]]['upper'] = current['upper'] + (1 / current['count']) * (float(row["upper"]) - current['upper'])
+        print("Lost one dictionary item")
 
 
 print("Writing data ...")
