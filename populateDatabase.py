@@ -80,33 +80,55 @@ try:
 except psycopg2.ProgrammingError as error:
     print error
 
-# Insert pubchem data from sider
+# Insert data from sider...
 sider_data = os.path.join("data", "sider", "stitchToUmls.json")
+# ... but only insert the data that has drugbank_ids mapped to pubchem_ids. The rest is useless (for now!!)
+pubchem_to_drugbank_data = os.path.join("data", "drugbank", "pubChemToDrugbankDictionary.json")
 
 sider_data_file = open(sider_data)
 sider_data = json.loads(sider_data_file.read())
 sider_data_file.close()
 
+pubchem_to_drugbank_file = open(pubchem_to_drugbank_data)
+pubchem_to_drugbank_data = json.loads(pubchem_to_drugbank_file.read())
+pubchem_to_drugbank_file.close()
+
 pubchem_table = []
 adr_table = []
 
-for element in sider_data:
-    pubchem_table.append(cursor.mogrify('(%s, %s, %s)', (element['pubChemId'], element['stitchId'], element['stitchIdFlat'])))
-    for adr in element['adverseReactions']:
-        # !! ODER COUNTS!!
-        current_ard = [element['pubChemId']]
-        current_ard.append(adr['umlsId'])
-        if adr['lower'] > adr['upper']:
-            print element['pubChemId'], adr['umlsId'], "has lower bound higher than upper bound. Inverting."
-            current_ard.append(psycopg2.extras.NumericRange(lower=adr['upper'], upper=adr['lower']))
-        elif adr['lower'] == adr['upper']:
-            print element['pubChemId'], adr['umlsId'], "has lower bound equal to upper bound. Adding 0.0001 to upper so to render the range non-empty."
-            current_ard.append(psycopg2.extras.NumericRange(lower=adr['lower'], upper=adr['upper'] + 0.0001))
-        else:
-            current_ard.append(psycopg2.extras.NumericRange(lower=adr['lower'], upper=adr['upper']))
-        current_ard.append(adr['count'])
+mapped_pubchem_ids = set([e['pubChemId'] for e in pubchem_to_drugbank_data])
+pubchem_ids_in_sider = []
 
-        adr_table.append(cursor.mogrify('(%s, %s, %s, %s)', current_ard))
+for element in sider_data:
+    if element['pubChemId'] in mapped_pubchem_ids:
+
+        pubchem_ids_in_sider.append(element['pubChemId'])
+
+        pubchem_table.append(cursor.mogrify('(%s, %s, %s)', (element['pubChemId'], element['stitchId'], element['stitchIdFlat'])))
+        for adr in element['adverseReactions']:
+            # !! ODER COUNTS!!
+            current_ard = [element['pubChemId']]
+            current_ard.append(adr['umlsId'])
+            if adr['lower'] > adr['upper']:
+                print element['pubChemId'], adr['umlsId'], "has lower bound higher than upper bound. Inverting."
+                current_ard.append(psycopg2.extras.NumericRange(lower=adr['upper'], upper=adr['lower']))
+            elif adr['lower'] == adr['upper']:
+                # Uncomment following line to log when 0.0001 is added to upper to render range not-empty
+                # print element['pubChemId'], adr['umlsId'], "has lower bound equal to upper bound. Adding 0.0001 to upper so to render the range non-empty."
+                current_ard.append(psycopg2.extras.NumericRange(lower=adr['lower'], upper=adr['upper'] + 0.0001))
+            else:
+                current_ard.append(psycopg2.extras.NumericRange(lower=adr['lower'], upper=adr['upper']))
+            current_ard.append(adr['count'])
+
+            adr_table.append(cursor.mogrify('(%s, %s, %s, %s)', current_ard))
+    # Uncomment following lines to log which pubchem ids have no drugbank mapping
+    # else:
+        # print element['pubChemId'], "has no mapping."
+
+pubchem_to_drugbank_table = [cursor.mogrify('(%s, %s)', (element['pubChemId'], element['drugbankId'])) for element in pubchem_to_drugbank_data if element['pubChemId'] in pubchem_ids_in_sider]
+pubchem_to_drugbank_table = psycopg2.extensions.AsIs(','.join(pubchem_to_drugbank_table))
+insert_pubchem_to_drugbank_table = 'insert into pubchem_to_drugbank ("pubchem_id", "drugbank_id") values %s on conflict do nothing'
+
 
 pubchem_table = psycopg2.extensions.AsIs(','.join(pubchem_table))
 adr_table = psycopg2.extensions.AsIs(','.join(adr_table))
@@ -117,11 +139,9 @@ insert_adr_table = 'insert into adverse_drug_reactions ("pubchem_id", "umls_id",
 try:
     cursor.execute(insert_pubchem_table, [pubchem_table])
     cursor.execute(insert_adr_table, [adr_table])
+    cursor.execute(insert_pubchem_to_drugbank_table, [pubchem_to_drugbank_table])
 except psycopg2.ProgrammingError as error:
     print error
-
-# Insert pubchem_to_drugbank_data
-pubchem_to_drugbank_data = os.path.join("data", "drugbank", "pubChemToDrugbankDictionary.json")
 
 try:
     conn.commit()
