@@ -50,7 +50,7 @@ drugbank_table = psycopg2.extensions.AsIs(','.join(drugbank_table))
 drugbank_synonyms_table = psycopg2.extensions.AsIs(','.join(drugbank_synonyms_table))
 drugbank_products_table = psycopg2.extensions.AsIs(','.join(drugbank_products_table))
 
-insert_drugbank_table = 'insert into drugbank ("name", "drugbank_id") values %s on conflict do nothing'
+insert_drugbank_table = 'insert into drugbank ("name", "drugbank_id") values %s'
 insert_drugbank_synonyms_table = 'insert into drugbank_synonyms ("synonym", "drugbank_id") values %s on conflict do nothing'
 insert_drugbank_products_table = 'insert into drugbank_products ("product", "drugbank_id") values %s on conflict do nothing'
 
@@ -97,8 +97,11 @@ for element in sider_data:
         current_ard = [element['pubChemId']]
         current_ard.append(adr['umlsId'])
         if adr['lower'] > adr['upper']:
-            print element['pubChemId'], adr['umlsId'], "has lower bound higher than upper bound. Inverting.",
+            print element['pubChemId'], adr['umlsId'], "has lower bound higher than upper bound. Inverting."
             current_ard.append(psycopg2.extras.NumericRange(lower=adr['upper'], upper=adr['lower']))
+        elif adr['lower'] == adr['upper']:
+            print element['pubChemId'], adr['umlsId'], "has lower bound equal to upper bound. Adding 0.0001 to upper so to render the range non-empty."
+            current_ard.append(psycopg2.extras.NumericRange(lower=adr['lower'], upper=adr['upper'] + 0.0001))
         else:
             current_ard.append(psycopg2.extras.NumericRange(lower=adr['lower'], upper=adr['upper']))
         current_ard.append(adr['count'])
