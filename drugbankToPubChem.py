@@ -3,7 +3,7 @@
 from __future__ import print_function
 import pubchempy
 import os
-import urllib2
+import pycurl
 import zipfile
 import csv
 import json
@@ -19,20 +19,21 @@ use_cache_only = False
 if not os.path.isdir(temp_folder):
     os.makedirs(temp_folder)
 
+if not os.path.isdir(os.path.join(temp_folder, scope_name)):
+    os.makedirs(os.path.join(temp_folder, scope_name))
+
 if not os.path.isfile(temp_file):
     print("Downloading file ...")
     try:
-        response = urllib2.urlopen(source_zip_url).read()
+        with open(temp_file, 'wb') as current_file:
+            c = pycurl.Curl()
+            c.setopt(c.FOLLOWLOCATION, 1L)
+            c.setopt(c.URL, source_zip_url)
+            c.setopt(c.WRITEDATA, current_file)
+            c.perform()
+            c.close()
     except IOError, e:
         print("Can't retrieve %r to %r: %s" % (source_zip_url, temp_folder, e))
-        quit()
-
-    try:
-        with open(temp_file, 'w') as f:
-            f.write(response)
-            f.close()
-    except:
-        print("Could not write zipfile to temp_dir")
         quit()
 
 print("Unzipping file ...")
