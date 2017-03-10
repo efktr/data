@@ -1,17 +1,59 @@
-# You need to download the full drugbank database and unzip it!
+# Currently get full xml drugbank db as: curl -L -o filename.zip -u EMAIL:PASSWORD https://www.drugbank.ca/releases/5-0-5/downloads/all-full-database
 
 import xmltodict
 import json
 import os
+import zipfile
+import pycurl
 
 temp_folder = './temp'
 data_folder = './data'
 scope_name = 'drugbank'
 
-source_zip_location = os.path.join(temp_folder, scope_name, "drugbank-full.xml")
+USERNAME = os.environ['DRUGBANK_USER']
+PASSWORD = os.environ['DRUGBANK_PASSWORD']
+
+source_zip_url = 'https://www.drugbank.ca/releases/5-0-5/downloads/all-full-database'
+temp_file = os.path.join(temp_folder, scope_name, "drugbank-full.zip")
+
+if not os.path.isdir(temp_folder):
+    os.makedirs(temp_folder)
+
+if not os.path.isfile(temp_file):
+    print("Downloading file ...")
+    try:
+        with open(temp_file, 'wb') as current_file:
+            c = pycurl.Curl()
+            c.setopt(c.USERPWD, '%s:%s' % (USERNAME, PASSWORD))
+            c.setopt(c.FOLLOWLOCATION, 1L)
+            c.setopt(c.URL, source_zip_url)
+            c.setopt(c.WRITEDATA, current_file)
+            c.perform()
+            c.close()
+    except IOError, e:
+        print("Can't retrieve %r to %r: %s" % (source_zip_url, temp_folder, e))
+        quit()
+
+print("Unzipping file ...")
+try:
+    with zipfile.ZipFile(temp_file) as fdazip:
+        for n in fdazip.namelist():
+            destination = os.path.join(temp_folder, scope_name, n)
+            destination_dir = os.path.dirname(destination)
+            if not os.path.isdir(destination_dir):
+                os.makedirs(destination_dir)
+            with fdazip.open(n) as file:
+                with open(destination, 'w') as f:
+                    f.write(file.read())
+                    f.close()
+                file.close()
+        fdazip.close()
+except zipfile.error, e:
+    print("Bad zipfile (from %r): %s" % (source_zip_url, e))
+    quit()
 
 print("Opening XML database dump")
-with open(source_zip_location) as f:
+with open(os.path.join(temp_folder, scope_name, "full database.xml")) as f:
     print("Opened XML database dump")
 
     print("Parsing XML into dictionaries.. This will take a while!")

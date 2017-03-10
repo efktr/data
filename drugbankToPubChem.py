@@ -4,7 +4,6 @@ from __future__ import print_function
 import pubchempy
 import os
 import urllib2
-import pandas
 import zipfile
 import csv
 import json
@@ -14,7 +13,7 @@ source_zip_url = 'https://www.drugbank.ca/releases/5-0-5/downloads/all-drugbank-
 temp_folder = './temp'
 data_folder = './data'
 scope_name = 'drugbank'
-temp_file = os.path.join(temp_folder, scope_name + '.zip')
+temp_file = os.path.join(temp_folder, scope_name, 'drugbankToPubChem.zip')
 use_cache_only = False
 
 if not os.path.isdir(temp_folder):
@@ -66,7 +65,6 @@ with open(os.path.join(temp_folder, scope_name, "drugbank vocabulary.csv")) as c
         synonyms = re.split(reg_split_no_esc, row['Synonyms'])
         inChi = row['Standard InChI Key']
 
-
         current = {
             "drugbankId": drugbankId,
             "commonName": commonName,
@@ -77,29 +75,27 @@ with open(os.path.join(temp_folder, scope_name, "drugbank vocabulary.csv")) as c
         if current['inChi'] is not None and current['inChi'] is not "":
             data.append(current)
 
-if not os.path.isdir(os.path.join(temp_folder, scope_name, "temp")):
-    os.makedirs(os.path.join(temp_folder, scope_name, "temp"))
+if not os.path.isdir(os.path.join(temp_folder, scope_name, "cache")):
+    os.makedirs(os.path.join(temp_folder, scope_name, "cache"))
 
 # Filter out data that has already been downloaded
-cached_files = [f.replace(".json", "") for f in os.listdir(os.path.join(temp_folder, scope_name, "temp")) if os.path.isfile(os.path.join(temp_folder, scope_name, "temp", f))]
+cached_files = [f.replace(".json", "") for f in os.listdir(os.path.join(temp_folder, scope_name, "cache")) if os.path.isfile(os.path.join(temp_folder, scope_name, "cache", f))]
 data = [item for item in data if item["drugbankId"] not in cached_files]
 
 if not use_cache_only:
     print("Getting pubChemIds for", len(data), "items")
 
-    # Read DrugBank compounds
-    drugbank_df = pandas.DataFrame(data)
     # map DrugBank compounds to pubchem using InChI
-    rows = list()
-    for i, row in drugbank_df.iterrows():
+    for row in data:
         try:
-            compounds = pubchempy.get_compounds(row.inChi, namespace='inchikey')
+            compounds = pubchempy.get_compounds(row['inChi'], namespace='inchikey')
             compounds = [compound.cid for compound in compounds]
             if len(compounds) > 0:
                 row['pubChemIds'] = compounds
                 print(row['drugbankId'], "-->", row['pubChemIds'])
-                rows.append(row)
-                row.to_json(os.path.join(temp_folder, scope_name, "temp", row['drugbankId'] + ".json"))
+                with open(os.path.join(temp_folder, scope_name, "cache", row['drugbankId'] + ".json"), 'wb') as out:
+                    out.write(json.dumps(row))
+                    out.close()
             else:
                 print(row['drugbankId'], "-->", "NO HIT")
         except pubchempy.BadRequestError:
