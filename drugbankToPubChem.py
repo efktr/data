@@ -115,9 +115,9 @@ if not os.path.isdir(os.path.join(data_folder, scope_name)):
     os.makedirs(os.path.join(data_folder, scope_name))
 
 inChiToPubChemIds = []
-cached_files = [f for f in os.listdir(os.path.join(temp_folder, scope_name, "temp")) if os.path.isfile(os.path.join(temp_folder, scope_name, "temp", f))]
+cached_files = [f for f in os.listdir(os.path.join(temp_folder, scope_name, "cache")) if os.path.isfile(os.path.join(temp_folder, scope_name, "cache", f))]
 for f in cached_files:
-    with open(os.path.join(temp_folder, scope_name, "temp", f)) as current:
+    with open(os.path.join(temp_folder, scope_name, "cache", f)) as current:
         inChiToPubChemIds.append(json.loads(current.read()))
         current.close()
 
