@@ -4,7 +4,7 @@ echo "Collecting sider data"
 python sider.py
 
 echo "Collecting drugbank data to create drugbank-pubchem mapping"
-python drugbanckToPubChem.py
+python drugbankToPubChem.py
 
 echo "Collecting drugbank data"
 python drugbank.py
