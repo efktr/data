@@ -19,6 +19,9 @@ temp_file = os.path.join(temp_folder, scope_name, "drugbank-full.zip")
 if not os.path.isdir(temp_folder):
     os.makedirs(temp_folder)
 
+if not os.path.isdir(temp_folder, scope_name):
+    os.makedirs(temp_folder, scope_name)
+
 if not os.path.isfile(temp_file):
     print("Downloading file ...")
     try:
