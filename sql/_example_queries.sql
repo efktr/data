@@ -74,3 +74,28 @@ FROM umls_dictionary AS umlsdic
        ) AS dbjoin
     ON dbjoin.umls_id = umlsdic.umls_id
 GROUP BY dbjoin.name;
+
+-- Select drug data based on drugbankId
+SELECT
+  db.drugbank_id,
+  db.name,
+  dbp.products,
+  dbs.synonyms
+FROM
+  drugbank AS db,
+  (
+    SELECT drugbank_id, json_agg(product) AS products
+    FROM drugbank_products
+    WHERE drugbank_id = 'DB00001'
+    GROUP BY drugbank_id
+  ) AS dbp,
+  (
+    SELECT drugbank_id, json_agg(synonym) AS synonyms
+    FROM drugbank_synonyms
+    WHERE drugbank_id = 'DB00001'
+    GROUP BY drugbank_id
+  ) AS dbs
+WHERE
+  db.drugbank_id = 'DB00001' AND
+  db.drugbank_id = dbp.drugbank_id AND
+  dbp.drugbank_id = dbs.drugbank_id;
