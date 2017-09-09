@@ -69,7 +69,7 @@ with open(os.path.join(temp_folder, scope_name, "full database.xml"), 'rb') as f
     if not os.path.isdir(os.path.join(data_folder, scope_name)):
         os.makedirs(os.path.join(data_folder, scope_name))
 
-    with open(os.path.join(data_folder, scope_name, 'drugbank.json'), 'wb') as out:
+    with open(os.path.join(data_folder, scope_name, 'drugbank.json'), 'w') as out:
         print("Writing JSON representation of database and filtering only wanted fields")
 
         result = []
