@@ -79,7 +79,7 @@ with open(os.path.join(temp_folder, scope_name, "full database.xml"), 'rb') as f
 
             if isinstance(drug['drugbank-id'], list):
                 current['drugbankId'] = [e['#text'] for e in drug['drugbank-id'] if isinstance(e, dict) and e['@primary'] == 'true'][0]
-                current['otherIds'] = [e['#text'] for e in drug['drugbank-id'] if isinstance(e, dict) and e['@primary'] != 'true']
+                current['otherIds'] = [e for e in drug['drugbank-id'] if isinstance(e, str)]
 
                 print(current)
                 quit()
