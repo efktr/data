@@ -56,7 +56,7 @@ except zipfile.error as e:
     quit()
 
 print("Opening XML database dump")
-with open(os.path.join(temp_folder, scope_name, "full database.xml")) as f:
+with open(os.path.join(temp_folder, scope_name, "full database.xml"), 'rb') as f:
     print("Opened XML database dump")
 
     print("Parsing XML into dictionaries.. This will take a while!")
