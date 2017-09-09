@@ -99,7 +99,7 @@ with open(os.path.join(temp_folder, scope_name, "full database.xml"), 'rb') as f
 
             result.append(current)
 
-        out.write(json.dumps(result))
+        json.dump(result, out)
         out.close()
 
 print("Done.")
