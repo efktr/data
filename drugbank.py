@@ -28,12 +28,12 @@ if not os.path.isfile(temp_file):
         with open(temp_file, 'wb') as current_file:
             c = pycurl.Curl()
             c.setopt(c.USERPWD, '%s:%s' % (USERNAME, PASSWORD))
-            c.setopt(c.FOLLOWLOCATION, 1L)
+            c.setopt(c.FOLLOWLOCATION, 1)
             c.setopt(c.URL, source_zip_url)
             c.setopt(c.WRITEDATA, current_file)
             c.perform()
             c.close()
-    except IOError, e:
+    except IOError as e:
         print("Can't retrieve %r to %r: %s" % (source_zip_url, temp_folder, e))
         quit()
 
@@ -51,7 +51,7 @@ try:
                     f.close()
                 file.close()
         fdazip.close()
-except zipfile.error, e:
+except zipfile.error as e:
     print("Bad zipfile (from %r): %s" % (source_zip_url, e))
     quit()
 
