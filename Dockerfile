@@ -18,6 +18,7 @@ RUN cat /usr/src/app/sql/umls_dictionary.sql >> /docker-entrypoint-initdb.d/001s
 RUN cat /usr/src/app/sql/adverse_drug_reactions.sql >> /docker-entrypoint-initdb.d/001structure.sql
 RUN cat /usr/src/app/sql/pubchem_to_drugbank.sql >> /docker-entrypoint-initdb.d/001structure.sql
 RUN cat /usr/src/app/sql/search.sql >> /docker-entrypoint-initdb.d/001structure.sql
+RUN cat /usr/src/app/sql/stitch_to_drugbank.sql >> /docker-entrypoint-initdb.d/001structure.sql
 
 # From http://stackoverflow.com/a/29503623/5708679
 RUN wget -O 99data.sql $(curl -s https://api.github.com/repos/efktr/data/releases/latest | grep 'browser_' | cut -d\" -f4)
