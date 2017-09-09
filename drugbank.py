@@ -46,7 +46,7 @@ try:
             if not os.path.isdir(destination_dir):
                 os.makedirs(destination_dir)
             with fdazip.open(n) as file:
-                with open(destination, 'w') as f:
+                with open(destination, 'wb') as f:
                     f.write(file.read())
                     f.close()
                 file.close()
