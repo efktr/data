@@ -41,7 +41,8 @@ drugbank_synonyms_table = []
 drugbank_products_table = []
 
 for element in drugbank:
-    drugbank_table.append(cursor.mogrify('(%s, %s)', (element['name'], element['drugbankId'])))
+    c = cursor.mogrify('(%s, %s, %s)', (element['name'], element['drugbankId'], element['otherIds'] if "otherIds" in element is not None else None))
+    drugbank_table.append(c)
     if element['synonyms'] is not None:
             for synonym in element['synonyms']:
                 drugbank_synonyms_table.append(cursor.mogrify('(%s, %s)', (synonym, element['drugbankId'])))
@@ -53,7 +54,7 @@ drugbank_table = psycopg2.extensions.AsIs(','.join(drugbank_table))
 drugbank_synonyms_table = psycopg2.extensions.AsIs(','.join(drugbank_synonyms_table))
 drugbank_products_table = psycopg2.extensions.AsIs(','.join(drugbank_products_table))
 
-insert_drugbank_table = 'insert into drugbank ("name", "drugbank_id") values %s'
+insert_drugbank_table = 'insert into drugbank ("name", "drugbank_id", "other_ids") values %s'
 insert_drugbank_synonyms_table = 'insert into drugbank_synonyms ("synonym", "drugbank_id") values %s on conflict do nothing'
 insert_drugbank_products_table = 'insert into drugbank_products ("product", "drugbank_id") values %s on conflict do nothing'
 
