@@ -46,7 +46,7 @@ try:
             if not os.path.isdir(destination_dir):
                 os.makedirs(destination_dir)
             with fdazip.open(n) as file:
-                with open(destination, 'w') as f:
+                with open(destination, 'wb') as f:
                     f.write(file.read())
                     f.close()
                 file.close()
@@ -56,7 +56,7 @@ except zipfile.error as e:
     quit()
 
 print("Opening XML database dump")
-with open(os.path.join(temp_folder, scope_name, "full database.xml")) as f:
+with open(os.path.join(temp_folder, scope_name, "full database.xml"), 'rb') as f:
     print("Opened XML database dump")
 
     print("Parsing XML into dictionaries.. This will take a while!")
@@ -69,7 +69,7 @@ with open(os.path.join(temp_folder, scope_name, "full database.xml")) as f:
     if not os.path.isdir(os.path.join(data_folder, scope_name)):
         os.makedirs(os.path.join(data_folder, scope_name))
 
-    with open(os.path.join(data_folder, scope_name, 'drugbank.json'), 'wb') as out:
+    with open(os.path.join(data_folder, scope_name, 'drugbank.json'), 'w') as out:
         print("Writing JSON representation of database and filtering only wanted fields")
 
         result = []
@@ -79,6 +79,7 @@ with open(os.path.join(temp_folder, scope_name, "full database.xml")) as f:
 
             if isinstance(drug['drugbank-id'], list):
                 current['drugbankId'] = [e['#text'] for e in drug['drugbank-id'] if isinstance(e, dict) and e['@primary'] == 'true'][0]
+                current['otherIds'] = [e for e in drug['drugbank-id'] if isinstance(e, str)]
             else:
                 current['drugbankId'] = drug['drugbank-id']['#text']
 
@@ -98,7 +99,7 @@ with open(os.path.join(temp_folder, scope_name, "full database.xml")) as f:
 
             result.append(current)
 
-        out.write(json.dumps(result))
+        json.dump(result, out)
         out.close()
 
 print("Done.")
