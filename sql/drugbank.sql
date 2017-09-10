@@ -6,6 +6,7 @@ CREATE TABLE "drugbank"
 (
     "drugbank_id" character varying(20) NOT NULL,
     "name" character varying(255) NOT NULL,
+    "other_ids" character varying(255)[],
     CONSTRAINT "drugbank_id_primary" PRIMARY KEY ("drugbank_id"),
     CONSTRAINT "name_unique" UNIQUE ("name")
 );
