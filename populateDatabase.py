@@ -26,7 +26,7 @@ try:
 
     conn = psycopg2.connect(connection_string)
 except:
-    print "I am unable to connect to the database"
+    print("I am unable to connect to the database")
 
 cursor = conn.cursor()
 
@@ -63,9 +63,9 @@ try:
     cursor.execute(insert_drugbank_synonyms_table, [drugbank_synonyms_table])
     cursor.execute(insert_drugbank_products_table, [drugbank_products_table])
 except psycopg2.ProgrammingError as error:
-    print error
+    print(error)
 except psycopg2.IntegrityError as error:
-    print error
+    print(error)
 
 # Insert UMLS data
 umls_dictionary_data = os.path.join("data", "sider", "umlsDictionary.json")
@@ -82,7 +82,7 @@ insert_umls_dictionary_table = 'insert into umls_dictionary ("umls_id", "name") 
 try:
     cursor.execute(insert_umls_dictionary_table, [umls_dictionary_table])
 except psycopg2.ProgrammingError as error:
-    print error
+    print(error)
 
 # Insert data from sider...
 sider_data = os.path.join("data", "sider", "stitchToUmls.json")
@@ -114,7 +114,7 @@ for element in sider_data:
             current_ard = [element['pubChemId']]
             current_ard.append(adr['umlsId'])
             if adr['lower'] > adr['upper']:
-                print element['pubChemId'], adr['umlsId'], "has lower bound higher than upper bound. Inverting."
+                print(element['pubChemId'], adr['umlsId'], "has lower bound higher than upper bound. Inverting.")
                 current_ard.append(psycopg2.extras.NumericRange(lower=adr['upper'], upper=adr['lower']))
             elif adr['lower'] == adr['upper']:
                 # Uncomment following line to log when 0.0001 is added to upper to render range not-empty
@@ -145,11 +145,11 @@ try:
     cursor.execute(insert_adr_table, [adr_table])
     cursor.execute(insert_pubchem_to_drugbank_table, [pubchem_to_drugbank_table])
 except psycopg2.ProgrammingError as error:
-    print error
+    print(error)
 
 try:
     conn.commit()
     cursor.close()
     conn.close()
 except:
-    print "Cannot commit and close connection"
+    print("Cannot commit and close connection")
