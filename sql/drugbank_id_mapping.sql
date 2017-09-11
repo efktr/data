@@ -1,3 +1,5 @@
+-- View: public.drugbank_id_mapping
+
 DROP VIEW IF EXISTS drugbank_id_mapping;
 
 

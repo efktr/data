@@ -1,3 +1,5 @@
+-- View: public.search
+
 DROP VIEW IF EXISTS search;
 
 CREATE OR REPLACE VIEW search AS
