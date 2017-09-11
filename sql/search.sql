@@ -4,10 +4,10 @@ DROP VIEW IF EXISTS search;
 
 CREATE OR REPLACE VIEW search AS
   SELECT
-      umlsdict.umls_id as reference,
-      umlsdict.name AS text,
-      umlsdict.name AS name,
-      'adr' AS type
+    umlsdict.umls_id as reference,
+    umlsdict.name AS text,
+    umlsdict.name AS name,
+    'adr' AS type
   FROM umls_dictionary AS umlsdict
   UNION
   (
