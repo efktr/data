@@ -32,7 +32,7 @@ cursor = conn.cursor()
 
 # Insert drugbank data
 drugbank_data = os.path.join("data", "drugbank", "drugbank.json")
-drugbank_file = open(drugbank_data)
+drugbank_file = open(drugbank_data, 'r')
 drugbank = json.loads(drugbank_file.read())
 drugbank_file.close()
 
@@ -42,13 +42,13 @@ drugbank_products_table = []
 
 for element in drugbank:
     c = cursor.mogrify('(%s, %s, %s)', (element['name'], element['drugbankId'], element['otherIds'] if "otherIds" in element is not None else None))
-    drugbank_table.append(c)
+    drugbank_table.append(c.decode())
     if element['synonyms'] is not None:
             for synonym in element['synonyms']:
-                drugbank_synonyms_table.append(cursor.mogrify('(%s, %s)', (synonym, element['drugbankId'])))
+                drugbank_synonyms_table.append(cursor.mogrify('(%s, %s)', (synonym, element['drugbankId'])).decode())
     if element['products'] is not None:
         for product in element['products']:
-            drugbank_products_table.append(cursor.mogrify('(%s, %s)', (product, element['drugbankId'])))
+            drugbank_products_table.append(cursor.mogrify('(%s, %s)', (product, element['drugbankId'])).decode())
 
 drugbank_table = psycopg2.extensions.AsIs(','.join(drugbank_table))
 drugbank_synonyms_table = psycopg2.extensions.AsIs(','.join(drugbank_synonyms_table))
@@ -74,7 +74,7 @@ umls_dictionary_file = open(umls_dictionary_data)
 umls_dictionary = json.loads(umls_dictionary_file.read())
 umls_dictionary_file.close()
 
-umls_dictionary_table = [cursor.mogrify('(%s, %s)', (element['umlsId'], element['name'])) for element in umls_dictionary]
+umls_dictionary_table = [cursor.mogrify('(%s, %s)', (element['umlsId'], element['name'])).decode() for element in umls_dictionary]
 umls_dictionary_table = psycopg2.extensions.AsIs(','.join(umls_dictionary_table))
 
 insert_umls_dictionary_table = 'insert into umls_dictionary ("umls_id", "name") values %s'
@@ -108,7 +108,7 @@ for element in sider_data:
 
         pubchem_ids_in_sider.append(element['pubChemId'])
 
-        pubchem_table.append(cursor.mogrify('(%s, %s, %s)', (element['pubChemId'], element['stitchId'], element['stitchIdFlat'])))
+        pubchem_table.append(cursor.mogrify('(%s, %s, %s)', (element['pubChemId'], element['stitchId'], element['stitchIdFlat'])).decode())
         for adr in element['adverseReactions']:
             # !! ODER COUNTS!!
             current_ard = [element['pubChemId']]
@@ -124,12 +124,12 @@ for element in sider_data:
                 current_ard.append(psycopg2.extras.NumericRange(lower=adr['lower'], upper=adr['upper']))
             current_ard.append(adr['count'])
 
-            adr_table.append(cursor.mogrify('(%s, %s, %s, %s)', current_ard))
+            adr_table.append(cursor.mogrify('(%s, %s, %s, %s)', current_ard).decode())
     # Uncomment following lines to log which pubchem ids have no drugbank mapping
     # else:
         # print element['pubChemId'], "has no mapping."
 
-pubchem_to_drugbank_table = [cursor.mogrify('(%s, %s)', (element['pubChemId'], element['drugbankId'])) for element in pubchem_to_drugbank_data if element['pubChemId'] in pubchem_ids_in_sider]
+pubchem_to_drugbank_table = [cursor.mogrify('(%s, %s)', (element['pubChemId'], element['drugbankId'])).decode() for element in pubchem_to_drugbank_data if element['pubChemId'] in pubchem_ids_in_sider]
 pubchem_to_drugbank_table = psycopg2.extensions.AsIs(','.join(pubchem_to_drugbank_table))
 insert_pubchem_to_drugbank_table = 'insert into pubchem_to_drugbank ("pubchem_id", "drugbank_id") values %s on conflict do nothing'
 
